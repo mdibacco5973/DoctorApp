@@ -17,6 +17,8 @@ import {
   LogOut,
   Menu,
   X,
+  UserRound,
+  BookOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -32,6 +34,11 @@ const navItems = [
     icon: Users,
   },
   {
+    label: "Doctores",
+    href: "/dashboard/doctores",
+    icon: UserRound,
+  },
+  {
     label: "Turnos",
     href: "/dashboard/turnos",
     icon: CalendarDays,
@@ -45,6 +52,11 @@ const navItems = [
         label: "Doctor",
         href: "/dashboard/configuracion/doctor",
         icon: UserCog,
+      },
+      {
+        label: "Especialidades",
+        href: "/dashboard/configuracion/especialidades",
+        icon: BookOpen,
       },
       {
         label: "Horarios de Atención",

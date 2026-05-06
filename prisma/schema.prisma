@@ -23,15 +23,18 @@ model User {
   officeId      String?
   office        Office?   @relation(fields: [officeId], references: [id])
   appointments  Appointment[] @relation("DoctorAppointments")
-  
-  // Link to subscription
-  subscription  DoctorSubscription?
-  
+
+  // Link to subscription (owner — 1:1)
+  subscription  Subscription?
+
+  // Doctor profile linked to this user (if sub-doctor)
+  doctor        Doctor?
+
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
 
-model DoctorSubscription {
+model Subscription {
   id            String    @id @default(cuid())
   firstName     String
   lastName      String
@@ -41,12 +44,55 @@ model DoctorSubscription {
   idNumber      String    @unique
   gender        String
   specialty     String
-  
+
   userId        String    @unique
   user          User      @relation(fields: [userId], references: [id])
-  
-  status        String    @default("ACTIVE") // ACTIVE, PENDING, EXPIRED
-  
+
+  // Doctores dados de alta desde esta suscripción
+  doctors       Doctor[]
+
+  // Especialidades configuradas en esta suscripción
+  specialties   Specialty[]
+
+  // Status: TRIAL | ACTIVE | PAST_DUE | EXPIRED
+  status        String    @default("TRIAL")
+  trialEndsAt   DateTime  // fecha de vencimiento del período gratuito (createdAt + 30 días)
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@map("subscription")
+}
+
+model Specialty {
+  id             String       @id @default(cuid())
+  name           String
+
+  subscriptionId String
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id])
+
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@unique([subscriptionId, name]) // no duplicar nombre dentro de la misma suscripción
+}
+
+model Doctor {
+  id            String    @id @default(cuid())
+  firstName     String
+  lastName      String
+  specialty     String
+  email         String    @unique
+  phone         String
+
+  // Subscription que lo dio de alta
+  subscriptionId String
+  subscription  Subscription @relation(fields: [subscriptionId], references: [id])
+
+  // Usuario de acceso al sistema
+  userId        String    @unique
+  user          User      @relation(fields: [userId], references: [id])
+
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
