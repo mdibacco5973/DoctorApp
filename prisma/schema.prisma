@@ -1,0 +1,105 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+enum UserRole {
+  DOCTOR
+  SECRETARY
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  password      String
+  role          UserRole  @default(DOCTOR)
+  officeId      String?
+  office        Office?   @relation(fields: [officeId], references: [id])
+  appointments  Appointment[] @relation("DoctorAppointments")
+  
+  // Link to subscription
+  subscription  DoctorSubscription?
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model DoctorSubscription {
+  id            String    @id @default(cuid())
+  firstName     String
+  lastName      String
+  email         String    @unique
+  phone         String
+  idType        String    // e.g., DNI, Passport
+  idNumber      String    @unique
+  gender        String
+  specialty     String
+  
+  userId        String    @unique
+  user          User      @relation(fields: [userId], references: [id])
+  
+  status        String    @default("ACTIVE") // ACTIVE, PENDING, EXPIRED
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Office {
+  id          String   @id @default(cuid())
+  name        String
+  address     String?
+  phone       String?
+  users       User[]
+  patients    Patient[]
+  appointments Appointment[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Patient {
+  id            String   @id @default(cuid())
+  name          String
+  email         String?
+  phone         String?
+  dni           String?  @unique
+  birthDate     DateTime?
+  medicalHistory String? @db.Text
+  officeId      String
+  office        Office   @relation(fields: [officeId], references: [id])
+  appointments  Appointment[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+model Appointment {
+  id          String            @id @default(cuid())
+  date        DateTime
+  reason      String?
+  status      AppointmentStatus @default(PENDING)
+  patientId   String
+  patient     Patient           @relation(fields: [patientId], references: [id])
+  doctorId    String
+  doctor      User              @relation("DoctorAppointments", fields: [doctorId], references: [id])
+  officeId    String
+  office      Office            @relation(fields: [officeId], references: [id])
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@index([doctorId])
+  @@index([patientId])
+  @@index([officeId])
+}
